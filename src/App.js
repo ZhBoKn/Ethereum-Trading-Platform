@@ -111,6 +111,21 @@ class App extends Component {
         })
     })
   }
+  saveImgOnIPFS = reader => {
+    return new Promise(function(resolve, reject) {
+      const buffer = Buffer.from(reader.result)
+      ipfs
+        .add(buffer)
+        .then(response => {
+          console.log(response)
+          resolve(response[0].hash)
+        })
+        .catch(err => {
+          console.error(err)
+          reject(err)
+        })
+    })
+  }
 
   render() {
     return (
@@ -154,6 +169,46 @@ class App extends Component {
         </button>
 
         <h1>{this.state.strContent}</h1>
+        <h2>ipfs将图片上传</h2>
+        <biv>
+          <label id="file">选择文件上传</label>
+          <input
+            type="file"
+            ref="file"
+            id="file"
+            name="file"
+            multiple="multiple"
+          ></input>
+        </biv>
+        <div>
+          <button
+            onClick={() => {
+              var file = this.refs.file.files[0]
+              var reader = new FileReader()
+              //上传的是图片的链接
+              // reader.readAsDataURL(file);
+              //上传的是图片文件
+              reader.readAsArrayBuffer(file)
+              //回调函数，当图片上传成功，会在回调函数中做一些处理
+              reader.onloadend = e => {
+                //上传图片到IPFS
+                console.log(reader)
+                this.saveImgOnIPFS(reader).then(hash => {
+                  console.log(hash)
+                  this.setState({ imgHash: hash })
+                })
+              }
+            }}
+          >
+            提交
+          </button>
+        </div>
+        {/* 如果存在内容的话，就将哈希值输出，否则输出错误 */}
+        {this.state.imgHash ? (
+          <h1>{this.state.imgHash}</h1>
+        ) : (
+          <h1> {'什么都没有哦！'}</h1>
+        )}
       </div>
     )
   }
